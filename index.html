@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Химическая лаборатория</title>
+<style>
+:root{
+  --paper:#12161c;
+  --paper-line:#232a34;
+  --ink:#e6edf3;
+  --ink-soft:#9aa7b5;
+  --accent:#ff7a3d;
+  --accent-soft:#5a3a2a;
+  --glass:#4d7c8a;
+  --flame:#ff9a4d;
+  --good:#4caf50;
+  --bad:#ff6b6b;
+  font-size:clamp(15px, 1.1vw, 18px);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;overflow-x:hidden;}
+body{
+  font-family:'Georgia','Times New Roman',serif;
+  color:var(--ink);
+  background:var(--paper);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+.utility{font-family:'Courier New',monospace;}
+
+/* HEADER */
+header{
+  padding:28px 24px 14px;
+  border-bottom:2px solid var(--ink);
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+header h1{
+  margin:0;
+  font-size:1.9rem;
+  letter-spacing:0.5px;
+  font-weight:700;
+}
+header .subtitle{
+  font-family:'Courier New',monospace;
+  font-size:0.8rem;
+  color:var(--ink-soft);
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+/* LAYOUT */
+.layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(320px,420px);
+  gap:0;
+  min-height:100vh;
+  width:100%;
+}
+@media (max-width: 880px){
+  .layout{grid-template-columns:1fr; min-height:auto;}
+}
+
+/* BENCH (left) */
+.bench{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:34px 18px 42px;
+  border-right:2px solid var(--ink);
+  min-width:0;
+  min-height:520px;
+}
+@keyframes glowPulse{
+  0%,100%{transform:translateX(-50%) scale(1);}
+  50%{transform:translateX(-50%) scale(1.08);}
+}
+
+/* burner */
+.burner{
+  margin-top:12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.flame{
+  width:18px;
+  height:34px;
+  margin-bottom:-4px;
+  opacity:0;
+  transform:scale(0.6);
+  transition:opacity .3s, transform .3s;
+}
+
+.flame.active{
+  opacity:1;
+  transform:scale(1);
+  animation:flicker 0.6s ease-in-out infinite alternate;
+}
+
+/* МОБИЛЬНАЯ ВЕРСИЯ — ставить после обычных стилей */
+@media (max-width:520px){
+  .bench{
+    padding:16px 10px 24px;
+    overflow-x:hidden;
+    min-height:auto;
+    align-items:center;
+  }
+
+  .rig{
+    position:relative;
+    width:300px;
+    max-width:100%;
+    height:430px; /* было 405px */
+    transform:none;
+    margin:0 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .tube-wrap{
+    position:relative;
+    width:100%;
+    height:380px; /* было 355px */
+    padding-top:34px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    overflow:visible;
+  }
+
+  svg.tube-svg{
+    display:block;
+    width:140px;  /* было 135px */
+    height:365px; /* было 350px */
+    max-width:100%;
+    overflow:visible;
+    margin:0 auto;
+  }
+
+  .burner{
+    margin-top:-22px;
+  }
+
+  .contents{
+    width:100%;
+    max-width:100%;
+    margin-top:14px;
+    justify-content:center;
+  }
+
+  .actions-row{
+    width:100%;
+  }
+
+  .actions-row .btn{
+    width:100%;
+    padding:12px 14px;
+  }
+}
+@keyframes glowPulse{
+  0%,100%{transform:translateX(-50%) scale(1);}
+  50%{transform:translateX(-50%) scale(1.08);}
+}
+
+/* burner */
+.burner{
+  margin-top: 12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.flame{
+  width:18px;
+  height:34px;
+  margin-bottom:-4px;
+  opacity:0;
+  transform:scale(0.6);
+  transition:opacity .3s, transform .3s;
+}
+.flame.active{
+  opacity:1;
+  transform:scale(1);
+  animation:flicker 0.6s ease-in-out infinite alternate;
+}
+@keyframes flicker{
+  from{transform:scale(1) translateY(0);}
+  to{transform:scale(1.08) translateY(-2px);}
+}
+.burner-body{
+  width:64px;
+  height:54px;
+  position:relative;
+}
+.burner-label{
+  margin-top:8px;
+  font-family:'Courier New',monospace;
+  font-size:0.78rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  border:1px solid var(--ink);
+  padding:4px 12px;
+  border-radius:2px;
+  background:var(--paper);
+  transition:background .2s, color .2s;
+}
+.burner.active .burner-label{
+  background:var(--accent);
+  color:var(--paper);
+  border-color:var(--accent);
+}
+
+/* observation card */
+.observation{
+  margin-top:28px;
+  width:100%;
+  max-width:500px;
+  min-width:0;
+  border:1px solid var(--ink);
+  background:rgba(20,25,32,0.92);
+  padding:14px 16px;
+  min-height:70px;
+  position:relative;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+}
+.observation::before{
+  content:"наблюдение";
+  position:absolute;
+  top:-10px;
+  left:12px;
+  background:var(--paper);
+  padding:0 6px;
+  font-family:'Courier New',monospace;
+  font-size:0.7rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.observation p{
+  margin:0;
+  line-height:1.5;
+  font-size:0.95rem;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.observation .eq{
+  margin-top:8px;
+  font-family:'Courier New',monospace;
+  font-size:0.85rem;
+  color:var(--accent);
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.observation .empty{color:var(--ink-soft); font-style:italic;}
+
+/* tube content list (chips) */
+.contents{
+  margin-top:18px;
+  width:100%;
+  max-width:500px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  justify-content:center;
+  min-height:36px;
+}
+.empty-tube{
+  width:100%;
+  text-align:center;
+  color:var(--ink-soft);
+  font-style:italic;
+  display:block;
+}
+.chip{
+  font-family:'Courier New',monospace;
+  font-size:0.8rem;
+  border:1px solid var(--ink);
+  padding:4px 10px;
+  border-radius:14px;
+  background:var(--paper);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.chip button{
+  border:none;
+  background:none;
+  cursor:pointer;
+  font-size:0.85rem;
+  line-height:1;
+  color:var(--bad);
+  font-family:inherit;
+  padding:0;
+}
+.actions-row{
+  margin-top:16px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.btn{
+  font-family:'Courier New',monospace;
+  font-size:0.85rem;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  border:1px solid var(--ink);
+  background:var(--paper);
+  padding:13px 22px;
+  cursor:pointer;
+  transition:all .15s;
+  border-radius:2px;
+}
+.btn:hover{background:var(--ink); color:var(--paper);}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:var(--paper);}
+.btn.primary:hover{background:#9c4424;}
+.btn:disabled{opacity:0.35; cursor:default;}
+.btn:disabled:hover{background:var(--paper); color:var(--ink);}
+.btn.primary:disabled:hover{background:var(--accent); color:var(--paper);}
+
+
+.btn.clear{
+  background:#ffffff;
+  border-color:#ffffff;
+  color:#11151b;
+}
+.btn.clear:hover{
+  background:#e9edf2;
+  border-color:#e9edf2;
+  color:#11151b;
+}
+
+/* SIDEBAR */
+.sidebar{
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  min-width:0;
+  max-height:100vh;
+  overflow:hidden;
+}
+.sidebar-header{
+  padding:22px 24px;
+  border-bottom:1px solid var(--ink);
+}
+.sidebar-header h2{
+  margin:0 0 4px;
+  font-size:1.1rem;
+}
+.sidebar-header p{
+  margin:0;
+  font-family:'Courier New',monospace;
+  font-size:0.78rem;
+  color:var(--ink-soft);
+}
+.search-box{
+  padding:18px 24px;
+  border-bottom:1px solid var(--paper-line);
+}
+.search-box input{
+  width:100%;
+  font-family:'Courier New',monospace;
+  font-size:0.9rem;
+  padding:8px 10px;
+  border:1px solid var(--ink);
+  background:var(--paper);
+  color:var(--ink);
+  border-radius:2px;
+}
+.search-box input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+
+.substance-list{
+  flex:1;
+  overflow-y:auto;
+  max-height:calc(100vh - 238px);
+}
+@media (max-width:880px){
+  .substance-list{max-height:none; overflow-y:visible;}
+}
+.category{
+  padding:10px 20px 4px;
+  font-family:'Courier New',monospace;
+  font-size:0.72rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--accent);
+  border-bottom:1px dashed var(--paper-line);
+}
+.substance{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:13px 24px;
+  border-bottom:1px solid var(--paper-line);
+  cursor:pointer;
+  transition:background .15s;
+}
+.substance:hover{background:rgba(179,80,43,0.08);}
+.substance:focus-visible{outline:2px solid var(--accent); outline-offset:-2px;}
+.substance .name{
+  font-size:0.95rem;
+}
+.substance .formula{
+  font-family:'Courier New',monospace;
+  font-size:0.8rem;
+  color:var(--ink-soft);
+  white-space:nowrap;
+}
+.substance.disabled{
+  opacity:0.35;
+  cursor:default;
+}
+.substance.disabled:hover{background:none;}
+
+.sidebar .observation{
+  width:auto;
+  max-width:none;
+  margin:18px 24px 20px;
+}
+
+@media (max-width:880px){
+  .sidebar{max-height:none; overflow:visible;}
+  .sidebar .observation{margin:16px 14px 18px; max-width:calc(100vw - 28px);}
+  .search-box, .sidebar-header{padding-left:14px; padding-right:14px;}
+  .substance{padding:12px 14px;}
+  .contents{max-width:100%;}
+  .chip{max-width:100%; flex-wrap:wrap;}
+}
+
+@media (max-width:520px){
+  .rig{height:370px; transform:scale(.9); transform-origin:top center; margin-bottom:-34px;}
+  .actions-row{width:100%;}
+  .btn{width:100%; padding:12px 14px;}
+  .substance .name{font-size:0.9rem;}
+  .substance .formula{font-size:0.75rem;}
+  .observation{padding:12px 14px;}
+  .observation p{font-size:0.9rem;}
+  .observation .eq{font-size:0.76rem;}
+}
+
+@media (max-width:380px){
+  .sidebar .observation{margin-left:10px; margin-right:10px; max-width:calc(100vw - 20px);}
+  .search-box, .sidebar-header{padding-left:10px; padding-right:10px;}
+  .substance{padding-left:10px; padding-right:10px;}
+}
+
+footer{
+  padding:18px 24px;
+  border-top:1px solid var(--ink);
+  font-family:'Courier New',monospace;
+  font-size:0.72rem;
+  color:var(--ink-soft);
+  letter-spacing:1px;
+  text-align:center;
+}
+
+/* scrollbar */
+.substance-list::-webkit-scrollbar{width:8px;}
+.substance-list::-webkit-scrollbar-thumb{background:var(--paper-line); border-radius:4px;}
+
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+
+#liquidWave{
+  transform-origin:50px 120px;
+  animation:liquidMove 2.8s ease-in-out infinite;
+}
+@keyframes liquidMove{
+  0%,100%{transform:translateX(0);}
+  50%{transform:translateX(-4px);}
+}
+#particles circle{
+  animation:particleFloat 3s ease-in-out infinite;
+}
+#particles circle:nth-child(2){animation-delay:.7s;}
+#particles circle:nth-child(3){animation-delay:1.2s;}
+@keyframes particleFloat{
+  0%,100%{transform:translateY(0); opacity:.45;}
+  50%{transform:translateY(-8px); opacity:.9;}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .flame.active, .heat-glow.active, #liquidWave, #particles circle, #bubbles circle, #foamLayer circle{animation:none;}
+}
+
+/* detailed chemistry visuals */
+#solidLayer .grain,
+#solidLayer .chunk,
+#solidLayer .metal,
+#precipitate .precip-dot,
+#cloudLayer .cloud-dot,
+#coatingLayer .coat-dot{
+  filter: drop-shadow(0 0 1px rgba(255,255,255,0.12));
+}
+#bubbles circle{
+  animation:bubbleRise 1.65s ease-in-out infinite;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+#foamLayer circle{
+  animation:foamPulse 1.4s ease-in-out infinite;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+#additionLayer.active{opacity:1;}
+#additionLayer .add-stream,
+#additionLayer .add-drop,
+#additionLayer .add-grain{
+  animation:addFade .7s ease-out forwards;
+}
+#wallDeposit .wall-mark{opacity:.9;}
+@keyframes bubbleRise{
+  0%{transform:translateY(0) scale(.82); opacity:.18;}
+  45%{opacity:.88;}
+  100%{transform:translateY(-34px) scale(1.08); opacity:0;}
+}
+@keyframes foamPulse{
+  0%,100%{transform:scale(.92); opacity:.62;}
+  50%{transform:scale(1.12); opacity:.95;}
+}
+@keyframes addFade{
+  0%{opacity:0; transform:translateY(-18px);}
+  18%{opacity:1;}
+  100%{opacity:0; transform:translateY(22px);}
+}
+
+</style>
+</head>
+<body>
+
+
+<div class="layout">
+
+  <main class="bench">
+    <div class="rig">
+      <div class="stand-pole" aria-hidden="true"></div>
+      <div class="stand-base" aria-hidden="true"></div>
+      <div class="stand-arm" aria-hidden="true"></div>
+      <div class="clamp" aria-hidden="true"></div>
+
+      <div class="tube-wrap">
+        <div class="heat-glow" id="heatGlow"></div>
+        <svg class="tube-svg" id="tubeSvg" width="120" height="320" viewBox="0 0 100 280">
+          <!-- liquid clip -->
+          <defs>
+            <clipPath id="tubeClip">
+              <path d="M30,10 L70,10 L70,210 A20,20 0 0 1 30,210 Z"/>
+            </clipPath>
+            <linearGradient id="liquidGradient" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stop-color="var(--liquid-color, var(--glass))" stop-opacity="0.95"/>
+              <stop offset="55%" stop-color="var(--liquid-color, var(--glass))" stop-opacity="0.78"/>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0.22"/>
+            </linearGradient>
+          </defs>
+
+          <!-- liquid -->
+          <g clip-path="url(#tubeClip)">
+            <rect id="liquidRect" x="25" y="118" width="50" height="102" fill="url(#liquidGradient)"/>
+            <path id="liquidWave" d="M25,118 C33,114 42,122 50,118 C58,114 67,122 75,118 L75,220 L25,220 Z"
+                  fill="url(#liquidGradient)" opacity="0.95"/>
+            <g id="cloudLayer" opacity="0"></g>
+            <g id="solidLayer" opacity="0"></g>
+            <g id="precipitate" opacity="0"></g>
+            <g id="coatingLayer" opacity="0"></g>
+            <g id="surfaceLayer" opacity="0"></g>
+            <g id="foamLayer" opacity="0"></g>
+            <path id="liquidShine" d="M38,34 C34,72 35,132 39,198" stroke="rgba(255,255,255,0.38)"
+                  stroke-width="3" stroke-linecap="round" fill="none" opacity="0.9"/>
+            <g id="bubbles" opacity="0"></g>
+            <g id="particles" opacity="0.25">
+              <circle cx="42" cy="155" r="1.6" fill="rgba(255,255,255,0.65)"/>
+              <circle cx="57" cy="178" r="1.2" fill="rgba(255,255,255,0.55)"/>
+              <circle cx="48" cy="196" r="1.4" fill="rgba(255,255,255,0.5)"/>
+            </g>
+
+          </g>
+
+          <!-- glass tube outline -->
+          <path d="M30,10 L70,10 L70,210 A20,20 0 0 1 30,210 Z"
+                fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+          <!-- rim -->
+          <line x1="26" y1="10" x2="74" y2="10" stroke="var(--ink)" stroke-width="2.5"/>
+
+          <g id="wallDeposit" opacity="0"></g>
+          <g id="additionLayer" opacity="0"></g>
+
+          <!-- gas/smoke -->
+          <g id="smoke" opacity="0" pointer-events="none">
+            <circle cx="46" cy="-10" r="4" fill="#cfcfcf"/>
+            <circle cx="55" cy="-18" r="5" fill="#dedede"/>
+            <circle cx="43" cy="-26" r="4.5" fill="#cfcfcf"/>
+            <circle cx="52" cy="-34" r="6" fill="#dedede"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="burner" id="burner" role="button" tabindex="0" aria-pressed="false" aria-label="Включить или выключить спиртовку">
+      <svg class="flame" id="flame" viewBox="0 0 24 40">
+        <path d="M12,0 C20,12 22,20 14,28 C18,22 10,20 10,28 C4,24 2,16 8,10 C6,16 10,16 12,0 Z" fill="var(--flame)"/>
+      </svg>
+      <svg class="burner-body" viewBox="0 0 64 54">
+        <!-- wick holder -->
+        <rect x="26" y="6" width="12" height="10" fill="var(--ink-soft)"/>
+        <!-- glass body -->
+        <path d="M14,16 L50,16 L46,48 A4,4 0 0 1 42,52 L22,52 A4,4 0 0 1 18,48 Z"
+              fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+        <!-- liquid in burner -->
+        <path d="M16.5,32 L47.5,32 L46,48 A4,4 0 0 1 42,52 L22,52 A4,4 0 0 1 18,48 Z"
+              fill="var(--accent-soft)" opacity="0.6"/>
+      </svg>
+      <div class="burner-label" id="burnerLabel">спиртовка: выкл</div>
+    </div>
+
+    <div class="contents" id="contents">
+      <span class="empty utility" style="color:var(--ink-soft); font-style:italic;">пробирка пуста — выберите вещество</span>
+    </div>
+
+    <div class="actions-row">
+      <button class="btn primary" id="reactBtn" disabled>провести реакцию</button>
+      <button class="btn clear" id="clearBtn">очистить пробирку</button>
+    </div>
+  </main>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Реактивы</h2>
+      
+    </div>
+    <div class="observation" id="observation">
+      <p class="empty">Добавьте вещество и проведите реакцию.</p>
+    </div>
+    <div class="search-box">
+      <input type="text" id="search" placeholder="поиск вещества или формулы..." aria-label="Поиск вещества">
+    </div>
+    <div class="substance-list" id="substanceList"></div>
+</aside>
+
+</div>
+
+
+<script>
+/* ============ DATA ============ */
+
+const SUBSTANCES = [
+  {cat:"Кислоты", id:"hcl", name:"Соляная кислота", formula:"HCl", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Кислоты", id:"h2so4", name:"Серная кислота (разб.)", formula:"H₂SO₄", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Кислоты", id:"hno3", name:"Азотная кислота", formula:"HNO₃", form:"solution", color:"#f4f4f0", amount:58},
+
+  {cat:"Основания", id:"naoh", name:"Гидроксид натрия", formula:"NaOH", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Основания", id:"nh4oh", name:"Раствор аммиака", formula:"NH₃·H₂O", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Основания", id:"caoh2", name:"Гидроксид кальция (известк. вода)", formula:"Ca(OH)₂", form:"solution", color:"#eff1e9", amount:58},
+
+  {cat:"Соли и оксиды", id:"naco3", name:"Карбонат натрия", formula:"Na₂CO₃", form:"powder", solidColor:"#eeeeea", amount:0},
+  {cat:"Соли и оксиды", id:"cuso4", name:"Сульфат меди(II)", formula:"CuSO₄", form:"solution", color:"#86c5e8", amount:58},
+  {cat:"Соли и оксиды", id:"agno3", name:"Нитрат серебра", formula:"AgNO₃", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Соли и оксиды", id:"bacl2", name:"Хлорид бария", formula:"BaCl₂", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Соли и оксиды", id:"nacl", name:"Хлорид натрия", formula:"NaCl", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Соли и оксиды", id:"feso4", name:"Сульфат железа(II)", formula:"FeSO₄", form:"solution", color:"#d9efda", amount:58},
+  {cat:"Соли и оксиды", id:"fecl3", name:"Хлорид железа(III)", formula:"FeCl₃", form:"solution", color:"#e7c879", amount:58},
+  {cat:"Соли и оксиды", id:"alcl3", name:"Хлорид алюминия", formula:"AlCl₃", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Соли и оксиды", id:"kmno4", name:"Перманганат калия", formula:"KMnO₄", form:"crystal", solidColor:"#4d185f", amount:0},
+  {cat:"Соли и оксиды", id:"cuo", name:"Оксид меди(II)", formula:"CuO", form:"powder", solidColor:"#171717", amount:0},
+  {cat:"Соли и оксиды", id:"nh4cl", name:"Хлорид аммония", formula:"NH₄Cl", form:"crystal", solidColor:"#eeeeee", amount:0},
+  {cat:"Соли и оксиды", id:"caco3", name:"Карбонат кальция (мел)", formula:"CaCO₃", form:"solid", solidColor:"#e8e5d8", amount:0},
+  {cat:"Соли и оксиды", id:"na2so4", name:"Сульфат натрия", formula:"Na₂SO₄", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Соли и оксиды", id:"na2so3", name:"Сульфит натрия", formula:"Na₂SO₃", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Соли и оксиды", id:"na3po4", name:"Фосфат натрия", formula:"Na₃PO₄", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Соли и оксиды", id:"na2sio3", name:"Силикат натрия", formula:"Na₂SiO₃", form:"solution", color:"#f4f4f0", amount:58},
+  {cat:"Соли и оксиды", id:"ki", name:"Иодид калия", formula:"KI", form:"solution", color:"#f4f4f0", amount:58},
+
+  {cat:"Металлы", id:"zn", name:"Цинк (гранулы)", formula:"Zn", form:"metal-granules", solidColor:"#9ca4aa", amount:0},
+  {cat:"Металлы", id:"fe", name:"Железо (порошок)", formula:"Fe", form:"metal-powder", solidColor:"#6f7374", amount:0},
+  {cat:"Металлы", id:"cu", name:"Медь", formula:"Cu", form:"metal-wire", solidColor:"#b86a36", amount:0},
+  {cat:"Металлы", id:"mg", name:"Магний (лента)", formula:"Mg", form:"metal-ribbon", solidColor:"#d9d9d6", amount:0},
+
+  {cat:"Газы и неметаллы", id:"co2", name:"Углекислый газ", formula:"CO₂", form:"gas", gasColor:"#d6d6d6", amount:0},
+  {cat:"Газы и неметаллы", id:"o2", name:"Кислород", formula:"O₂", form:"gas", gasColor:"#e8f3ff", amount:0},
+
+  {cat:"Индикаторы и прочее", id:"phenol", name:"Фенолфталеин", formula:"инд.", form:"indicator", color:"#f4f4f0", amount:18},
+  {cat:"Индикаторы и прочее", id:"litmus", name:"Лакмус", formula:"инд.", form:"indicator", color:"#7750b8", amount:18},
+  {cat:"Индикаторы и прочее", id:"kscn", name:"Роданид калия", formula:"KSCN", form:"solution", color:"#f4f4f0", amount:46},
+  {cat:"Индикаторы и прочее", id:"water", name:"Вода (дист.)", formula:"H₂O", form:"liquid", color:"#8fd0e7", amount:58},
+];
+
+function key(a,b){ return [a,b].sort().join('+'); }
+const REACTIONS = {};
+function add(a,b,data){ REACTIONS[key(a,b)] = data; }
+
+/* ============ REACTION DATABASE ============ */
+
+/* Acid + base / indicators */
+add('hcl','naoh',{solutionColor:'#f4f4f0', text:'Реакция нейтрализации проходит без видимых внешних эффектов: раствор остаётся бесцветным, возможен лёгкий нагрев.', eq:'HCl + NaOH → NaCl + H₂O', hotText:'При нагревании вода испаряется сильнее, у стенок появляется белый налёт соли после выпаривания.', wallDeposit:{color:'#ffffff', place:'upper'}});
+add('h2so4','naoh',{solutionColor:'#f4f4f0', text:'Кислота и щёлочь нейтрализуют друг друга; раствор остаётся бесцветным.', eq:'H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O'});
+add('hno3','naoh',{solutionColor:'#f4f4f0', text:'Идёт нейтрализация: кислота и щёлочь образуют соль и воду, видимых изменений почти нет.', eq:'HNO₃ + NaOH → NaNO₃ + H₂O'});
+add('hcl','caoh2',{solutionColor:'#f4f4f0', text:'Соляная кислота нейтрализует известковую воду, раствор остаётся почти бесцветным.', eq:'Ca(OH)₂ + 2HCl → CaCl₂ + 2H₂O'});
+add('hno3','caoh2',{solutionColor:'#f4f4f0', text:'Проходит нейтрализация: образуется раствор нитрата кальция и вода.', eq:'Ca(OH)₂ + 2HNO₃ → Ca(NO₃)₂ + 2H₂O'});
+add('h2so4','caoh2',{solutionColor:'#e9e6da', precip:{type:'cloud', color:'#ffffff', density:34}, text:'При нейтрализации появляется белая взвесь малорастворимого сульфата кальция.', eq:'Ca(OH)₂ + H₂SO₄ → CaSO₄↓ + 2H₂O'});
+add('hcl','nh4oh',{solutionColor:'#f4f4f0', text:'Аммиачный запах исчезает: аммиак связывается кислотой с образованием соли аммония.', eq:'NH₃·H₂O + HCl → NH₄Cl + H₂O'});
+add('h2so4','nh4oh',{solutionColor:'#f4f4f0', text:'Раствор аммиака нейтрализуется кислотой, образуется сульфат аммония.', eq:'2NH₃·H₂O + H₂SO₄ → (NH₄)₂SO₄ + 2H₂O'});
+add('hno3','nh4oh',{solutionColor:'#f4f4f0', text:'Аммиак нейтрализуется азотной кислотой, образуется нитрат аммония.', eq:'NH₃·H₂O + HNO₃ → NH₄NO₃ + H₂O'});
+
+add('phenol','naoh',{solutionColor:'#d24fae', text:'Раствор мгновенно окрашивается в малиновый цвет — фенолфталеин показывает щелочную среду.', eq:'фенолфталеин + OH⁻ → малиновое окрашивание', hotText:'При нагревании окраска сначала яркая, затем постепенно бледнеет в горячей щёлочи.'});
+add('phenol','nh4oh',{solutionColor:'#d66bb7', text:'Фенолфталеин окрашивается в слабый малиновый цвет: раствор аммиака создаёт щелочную среду.', eq:'индикатор + NH₃·H₂O → малиновое окрашивание'});
+add('phenol','caoh2',{solutionColor:'#d24fae', text:'Фенолфталеин становится малиновым — известковая вода имеет щелочную среду.', eq:'индикатор + OH⁻ → малиновое окрашивание'});
+add('phenol','hcl',{solutionColor:'#f4f4f0', text:'Раствор остаётся бесцветным — в кислой среде фенолфталеин не меняет окраску.', eq:'индикатор + кислота → без изменений'});
+add('phenol','h2so4',{solutionColor:'#f4f4f0', text:'Фенолфталеин в кислой среде остаётся бесцветным.', eq:'индикатор + H⁺ → без изменений'});
+add('phenol','hno3',{solutionColor:'#f4f4f0', text:'Фенолфталеин не окрашивается: среда кислая.', eq:'индикатор + H⁺ → без изменений'});
+add('litmus','hcl',{solutionColor:'#d6453c', text:'Лакмус окрашивает раствор в красный цвет — кислая среда.', eq:'лакмус + H⁺ → красное окрашивание'});
+add('litmus','h2so4',{solutionColor:'#d6453c', text:'Лакмус краснеет: в растворе кислая среда.', eq:'лакмус + H⁺ → красное окрашивание'});
+add('litmus','hno3',{solutionColor:'#d6453c', text:'Лакмус окрашивает раствор в красный цвет — это признак кислой среды.', eq:'лакмус + H⁺ → красное окрашивание'});
+add('litmus','naoh',{solutionColor:'#3d6fd1', text:'Лакмус окрашивает раствор в синий цвет — щелочная среда.', eq:'лакмус + OH⁻ → синее окрашивание'});
+add('litmus','nh4oh',{solutionColor:'#3d6fd1', text:'Раствор аммиака — слабое основание, лакмус синеет.', eq:'NH₃·H₂O → синее окрашивание лакмуса'});
+add('litmus','caoh2',{solutionColor:'#3d6fd1', text:'Лакмус синеет: известковая вода — щёлочная среда.', eq:'лакмус + OH⁻ → синее окрашивание'});
+
+/* Carbonates, sulfites, gases */
+add('hcl','naco3',{solutionColor:'#f4f4f0', consumed:['naco3'], gas:{from:'powder', color:'#e8e8e8', count:22}, foam:true, text:'Карбонат натрия быстро растворяется с бурным шипением: пузырьки CO₂ поднимаются от крупинок и собираются пеной у поверхности.', eq:'Na₂CO₃ + 2HCl → 2NaCl + H₂O + CO₂↑', hotText:'При нагревании выделение CO₂ идёт ещё быстрее, пена у поверхности становится заметнее.'});
+add('h2so4','naco3',{solutionColor:'#f4f4f0', consumed:['naco3'], gas:{from:'powder', color:'#e8e8e8', count:20}, foam:true, text:'Карбонат реагирует с кислотой с шипением: CO₂ выделяется от крупинок карбоната.', eq:'Na₂CO₃ + H₂SO₄ → Na₂SO₄ + H₂O + CO₂↑', hotText:'При нагревании выделение углекислого газа усиливается, раствор заметно пенится.'});
+add('hno3','naco3',{solutionColor:'#f4f4f0', consumed:['naco3'], gas:{from:'powder', color:'#e8e8e8', count:20}, foam:true, text:'Раствор шипит: карбонат натрия вытесняется сильной кислотой с выделением CO₂.', eq:'Na₂CO₃ + 2HNO₃ → 2NaNO₃ + H₂O + CO₂↑'});
+add('hcl','caco3',{solutionColor:'#f4f4f0', keepSolids:['caco3'], gas:{from:'solid', color:'#e8e8e8', count:18}, foam:true, text:'Кусочки мела растворяются с шипением: пузырьки CO₂ идут именно с поверхности твёрдого CaCO₃.', eq:'CaCO₃ + 2HCl → CaCl₂ + H₂O + CO₂↑'});
+add('hno3','caco3',{solutionColor:'#f4f4f0', keepSolids:['caco3'], gas:{from:'solid', color:'#e8e8e8', count:18}, foam:true, text:'Мел растворяется с выделением пузырьков CO₂, газ идёт с поверхности кусочков.', eq:'CaCO₃ + 2HNO₃ → Ca(NO₃)₂ + H₂O + CO₂↑'});
+add('caco3','h2so4',{solutionColor:'#e7e4d8', keepSolids:['caco3'], solidCoating:{target:'caco3', color:'#ffffff'}, gas:{from:'solid', color:'#e8e8e8', count:8}, precip:{type:'surface-coating', color:'#ffffff'}, text:'Реакция быстро замедляется: на поверхности мела образуется корка CaSO₄, поэтому газ выделяется только с открытых участков.', eq:'CaCO₃ + H₂SO₄ → CaSO₄↓ + H₂O + CO₂↑'});
+add('co2','caoh2',{solutionColor:'#e9e6da', gas:{from:'bottom', color:'#e8e8e8', count:12}, precip:{type:'cloud', color:'#ffffff', density:42}, text:'При пропускании CO₂ известковая вода мутнеет: белая взвесь CaCO₃ появляется по всему объёму раствора.', eq:'Ca(OH)₂ + CO₂ → CaCO₃↓ + H₂O'});
+add('co2','naoh',{solutionColor:'#f4f4f0', gas:{from:'bottom', color:'#e8e8e8', count:8}, text:'Углекислый газ поглощается щёлочью; заметного осадка нет, видны только проходящие пузырьки газа.', eq:'2NaOH + CO₂ → Na₂CO₃ + H₂O'});
+add('caoh2','naco3',{solutionColor:'#e9e6da', consumed:['naco3'], precip:{type:'cloud', color:'#ffffff', density:34}, text:'Появляется белая муть — тонкая взвесь карбоната кальция в растворе.', eq:'Ca(OH)₂ + Na₂CO₃ → CaCO₃↓ + 2NaOH'});
+add('hcl','na2so3',{solutionColor:'#f4f4f0', gas:{from:'surface', color:'#d8d8d8', count:12}, smoke:{color:'#d8d8d8'}, text:'Выделяется газ с резким удушливым запахом — SO₂; пузырьки быстро выходят к поверхности.', eq:'Na₂SO₃ + 2HCl → 2NaCl + H₂O + SO₂↑'});
+add('h2so4','na2so3',{solutionColor:'#f4f4f0', gas:{from:'surface', color:'#d8d8d8', count:12}, smoke:{color:'#d8d8d8'}, text:'При добавлении кислоты выделяется SO₂ с резким запахом; газ уходит через верх пробирки.', eq:'Na₂SO₃ + H₂SO₄ → Na₂SO₄ + H₂O + SO₂↑'});
+
+/* Precipitates */
+add('agno3','nacl',{solutionColor:'#e9e6da', precip:{type:'curdy', color:'#ffffff', density:22}, text:'Сразу образуется белый творожистый осадок AgCl: хлопья появляются в объёме и оседают на дно.', eq:'AgNO₃ + NaCl → AgCl↓ + NaNO₃', hotText:'При нагревании и на свету осадок AgCl постепенно сереет.', hotPrecip:{type:'curdy', color:'#8a8a8a', density:22}});
+add('agno3','hcl',{solutionColor:'#e9e6da', precip:{type:'curdy', color:'#ffffff', density:22}, text:'Появляется белый творожистый осадок AgCl — качественная реакция на хлорид-ион.', eq:'AgNO₃ + HCl → AgCl↓ + HNO₃'});
+add('agno3','ki',{solutionColor:'#efe7bd', precip:{type:'bottom', color:'#f3d24a', density:18}, text:'Выпадает жёлтый осадок AgI; частицы быстро собираются на дне.', eq:'AgNO₃ + KI → AgI↓ + KNO₃'});
+add('agno3','na3po4',{solutionColor:'#efe7bd', precip:{type:'bottom', color:'#f1d04a', density:20}, text:'Образуется жёлтый осадок фосфата серебра — качественная реакция на PO₄³⁻.', eq:'3AgNO₃ + Na₃PO₄ → Ag₃PO₄↓ + 3NaNO₃'});
+add('agno3','naoh',{solutionColor:'#d6c2a4', precip:{type:'bottom', color:'#6f4c2b', density:24}, text:'Сначала образуется AgOH, который быстро превращается в бурый осадок Ag₂O.', eq:'2AgNO₃ + 2NaOH → Ag₂O↓ + 2NaNO₃ + H₂O'});
+add('bacl2','h2so4',{solutionColor:'#e9e6da', precip:{type:'dense-bottom', color:'#ffffff', density:28}, text:'Образуется плотный белый осадок BaSO₄, не растворяющийся в кислотах.', eq:'BaCl₂ + H₂SO₄ → BaSO₄↓ + 2HCl'});
+add('bacl2','na2so4',{solutionColor:'#e9e6da', precip:{type:'dense-bottom', color:'#ffffff', density:28}, text:'Выпадает плотный белый осадок BaSO₄ — качественная реакция на сульфат-ион.', eq:'BaCl₂ + Na₂SO₄ → BaSO₄↓ + 2NaCl'});
+add('bacl2','cuso4',{solutionColor:'#bcd8ee', precip:{type:'dense-bottom', color:'#ffffff', density:28}, text:'Образуется белый осадок BaSO₄, а раствор остаётся голубоватым из-за ионов Cu²⁺.', eq:'BaCl₂ + CuSO₄ → BaSO₄↓ + CuCl₂'});
+add('bacl2','naco3',{solutionColor:'#e9e6da', consumed:['naco3'], precip:{type:'bottom', color:'#ffffff', density:24}, text:'Выпадает белый осадок BaCO₃; карбонат переходит из крупинок в осадок на дне.', eq:'BaCl₂ + Na₂CO₃ → BaCO₃↓ + 2NaCl'});
+add('cuso4','naoh',{solutionColor:'#e3effa', precip:{type:'gel', color:'#3aa0c9', density:26}, text:'Образуется студенистый голубой осадок Cu(OH)₂, который не просто лежит пластом, а даёт рыхлые сгустки.', eq:'CuSO₄ + 2NaOH → Cu(OH)₂↓ + Na₂SO₄', hotText:'При нагревании голубой осадок чернеет, превращаясь в CuO.', hotEq:'Cu(OH)₂ →(t°) CuO + H₂O', hotPrecip:{type:'bottom', color:'#2b2b2b', density:26}});
+add('cuso4','caoh2',{solutionColor:'#e3effa', precip:{type:'gel', color:'#3aa0c9', density:26}, text:'Образуется голубой студенистый осадок Cu(OH)₂; возможна примесь белого CaSO₄.', eq:'CuSO₄ + Ca(OH)₂ → Cu(OH)₂↓ + CaSO₄'});
+add('cuso4','nh4oh',{solutionColor:'#2454b8', precip:{type:'gel', color:'#3aa0c9', density:14}, text:'Сначала появляется голубой осадок Cu(OH)₂; в избытке аммиака он растворяется, раствор становится ярко-синим.', eq:'Cu²⁺ + 2OH⁻ → Cu(OH)₂↓; Cu(OH)₂ + NH₃(изб.) → ярко-синий комплекс'});
+add('feso4','naoh',{solutionColor:'#e7eee1', precip:{type:'gel', color:'#9bd17c', density:24}, text:'Выпадает грязно-зелёный осадок Fe(OH)₂; на воздухе он постепенно буреет.', eq:'FeSO₄ + 2NaOH → Fe(OH)₂↓ + Na₂SO₄'});
+add('feso4','nh4oh',{solutionColor:'#e7eee1', precip:{type:'gel', color:'#9bd17c', density:24}, text:'Выпадает грязно-зелёный осадок Fe(OH)₂, который на воздухе постепенно буреет.', eq:'FeSO₄ + 2NH₃·H₂O → Fe(OH)₂↓ + (NH₄)₂SO₄'});
+add('fecl3','naoh',{solutionColor:'#efe1c2', precip:{type:'gel', color:'#8b4a20', density:28}, text:'Выпадает бурый студенистый осадок Fe(OH)₃.', eq:'FeCl₃ + 3NaOH → Fe(OH)₃↓ + 3NaCl'});
+add('fecl3','nh4oh',{solutionColor:'#efe1c2', precip:{type:'gel', color:'#8b4a20', density:28}, text:'Образуется бурый осадок Fe(OH)₃ — характерная реакция иона Fe³⁺ с основанием.', eq:'FeCl₃ + 3NH₃·H₂O → Fe(OH)₃↓ + 3NH₄Cl'});
+add('alcl3','naoh',{solutionColor:'#e9e6da', precip:{type:'gel', color:'#ffffff', density:28}, text:'Образуется белый студенистый осадок Al(OH)₃; в избытке щёлочи он растворяется.', eq:'AlCl₃ + 3NaOH → Al(OH)₃↓ + 3NaCl; Al(OH)₃ + NaOH → Na[Al(OH)₄]'});
+add('alcl3','nh4oh',{solutionColor:'#e9e6da', precip:{type:'gel', color:'#ffffff', density:28}, text:'Выпадает белый студенистый осадок Al(OH)₃, не растворяющийся в избытке аммиака.', eq:'AlCl₃ + 3NH₃·H₂O → Al(OH)₃↓ + 3NH₄Cl'});
+add('hcl','na2sio3',{solutionColor:'#e9e6da', precip:{type:'gel', color:'#d8d8d8', density:34}, text:'Раствор густеет: образуется студенистая кремниевая кислота, заполняющая нижнюю часть пробирки.', eq:'Na₂SiO₃ + 2HCl → H₂SiO₃↓ + 2NaCl'});
+add('kmno4','na2so3',{solutionColor:'#c8a08f', precip:{type:'cloud', color:'#5a3522', density:32}, text:'Фиолетовая окраска перманганата исчезает, появляется бурый MnO₂ — сульфит проявляет восстановительные свойства.', eq:'2KMnO₄ + 3Na₂SO₃ + H₂O → 2MnO₂↓ + 3Na₂SO₄ + 2KOH'});
+
+/* Complex/color reactions */
+add('fecl3','kscn',{solutionColor:'#9d1422', text:'Раствор становится кроваво-красным по всему объёму — качественная реакция на Fe³⁺ с роданид-ионом.', eq:'Fe³⁺ + 3SCN⁻ → Fe(SCN)₃'});
+add('fecl3','ki',{solutionColor:'#7c4a1f', text:'Раствор буреет: Fe³⁺ окисляет I⁻ до свободного иода.', eq:'2FeCl₃ + 2KI → 2FeCl₂ + 2KCl + I₂'});
+
+/* Metal + acid / oxide + acid */
+add('zn','hcl',{solutionColor:'#eef3f3', keepSolids:['zn'], gas:{from:'metal', color:'#e8e8e8', count:18}, text:'Пузырьки H₂ образуются прямо на поверхности гранул цинка; металл постепенно растворяется.', eq:'Zn + 2HCl → ZnCl₂ + H₂↑', hotText:'При нагревании пузырьки H₂ покрывают гранулы плотнее, реакция идёт быстрее.', hotGas:{from:'metal', color:'#e8e8e8', count:26}});
+add('mg','hcl',{solutionColor:'#eef3f3', keepSolids:['mg'], gas:{from:'metal', color:'#e8e8e8', count:26}, foam:true, text:'Лента магния быстро растворяется; пузырьки H₂ идут по всей её поверхности.', eq:'Mg + 2HCl → MgCl₂ + H₂↑'});
+add('fe','hcl',{solutionColor:'#dff0e1', keepSolids:['fe'], gas:{from:'metal', color:'#e8e8e8', count:10}, text:'Железо реагирует медленно: редкие пузырьки H₂ идут с поверхности порошка, раствор зеленеет от Fe²⁺.', eq:'Fe + 2HCl → FeCl₂ + H₂↑'});
+add('cu','hcl',{solutionColor:'#eef3f3', keepSolids:['cu'], text:'Видимых изменений нет: медь стоит после водорода и не вытесняет его из соляной кислоты.', eq:'Cu + HCl → реакция не идёт'});
+add('zn','h2so4',{solutionColor:'#eef3f3', keepSolids:['zn'], gas:{from:'metal', color:'#e8e8e8', count:18}, text:'Гранулы цинка покрываются пузырьками H₂ и постепенно растворяются.', eq:'Zn + H₂SO₄ → ZnSO₄ + H₂↑'});
+add('mg','h2so4',{solutionColor:'#eef3f3', keepSolids:['mg'], gas:{from:'metal', color:'#e8e8e8', count:24}, foam:true, text:'Магний быстро растворяется в разбавленной серной кислоте с выделением H₂.', eq:'Mg + H₂SO₄ → MgSO₄ + H₂↑'});
+add('fe','h2so4',{solutionColor:'#dff0e1', keepSolids:['fe'], gas:{from:'metal', color:'#e8e8e8', count:10}, text:'Железо медленно растворяется, пузырьки H₂ появляются на поверхности порошка.', eq:'Fe + H₂SO₄ → FeSO₄ + H₂↑'});
+add('cu','hno3',{solutionColor:'#9fd6f0', keepSolids:['cu'], gas:{from:'metal', color:'#b56a35', count:10}, smoke:{color:'#b56a35'}, text:'Медь растворяется, раствор голубеет; у поверхности меди и над раствором появляются бурые пары NO₂.', eq:'Cu + 4HNO₃(конц.) → Cu(NO₃)₂ + 2NO₂↑ + 2H₂O'});
+add('cuo','hcl',{solutionColor:'#7fb9cf', consumed:['cuo'], text:'Чёрный порошок CuO растворяется в кислоте, раствор становится голубовато-зелёным.', eq:'CuO + 2HCl → CuCl₂ + H₂O', hotText:'При нагревании чёрный порошок растворяется быстрее, окраска становится насыщеннее.'});
+add('cuo','h2so4',{solutionColor:'#86c5e8', consumed:['cuo'], text:'Чёрный порошок CuO постепенно растворяется, образуя голубой раствор CuSO₄.', eq:'CuO + H₂SO₄ → CuSO₄ + H₂O', hotText:'При нагревании растворение идёт заметно быстрее.'});
+add('cuo','hno3',{solutionColor:'#9fd6f0', consumed:['cuo'], text:'Чёрный оксид меди(II) растворяется в кислоте, раствор становится голубым из-за Cu²⁺.', eq:'CuO + 2HNO₃ → Cu(NO₃)₂ + H₂O', hotText:'При нагревании чёрный порошок растворяется быстрее, голубая окраска становится насыщеннее.'});
+add('zn','naoh',{solutionColor:'#eef3f3', keepSolids:['zn'], coldText:'В холодной щёлочи цинк реагирует очень медленно, заметных изменений почти нет.', coldEq:'Zn + NaOH → заметной реакции без нагревания нет', text:'В холодной щёлочи цинк реагирует очень медленно, заметных изменений почти нет.', eq:'Zn + NaOH → заметной реакции без нагревания нет', hotText:'При нагревании цинк растворяется в щёлочи с выделением H₂ — проявляются амфотерные свойства цинка.', hotEq:'Zn + 2NaOH + 2H₂O → Na₂[Zn(OH)₄] + H₂↑', hotGas:{from:'metal', color:'#e8e8e8', count:18}});
+
+/* Metal displacement: deposit appears on metal surface, not at bottom */
+add('fe','cuso4',{solutionColor:'#dff0e1', keepSolids:['fe'], deposit:{target:'fe', color:'#b86a36'}, text:'Красноватая медь выделяется на поверхности железа, а голубая окраска раствора бледнеет.', eq:'Fe + CuSO₄ → FeSO₄ + Cu↓'});
+add('zn','cuso4',{solutionColor:'#eef3f3', keepSolids:['zn'], deposit:{target:'zn', color:'#b86a36'}, text:'На цинке появляется красный налёт меди, синяя окраска раствора исчезает.', eq:'Zn + CuSO₄ → ZnSO₄ + Cu↓'});
+add('mg','cuso4',{solutionColor:'#eef3f3', keepSolids:['mg'], deposit:{target:'mg', color:'#b86a36'}, text:'Магний вытесняет медь: красноватый налёт появляется именно на ленте магния.', eq:'Mg + CuSO₄ → MgSO₄ + Cu↓'});
+add('cu','agno3',{solutionColor:'#bcd8ee', keepSolids:['cu'], deposit:{target:'cu', color:'#e6e6e6', crystal:true}, text:'На медной поверхности растут серебристые кристаллы Ag, раствор голубеет от ионов Cu²⁺.', eq:'Cu + 2AgNO₃ → Cu(NO₃)₂ + 2Ag↓'});
+add('zn','agno3',{solutionColor:'#eef3f3', keepSolids:['zn'], deposit:{target:'zn', color:'#e6e6e6', crystal:true}, text:'На цинке появляются серебристые кристаллы, а цинк переходит в раствор.', eq:'Zn + 2AgNO₃ → Zn(NO₃)₂ + 2Ag↓'});
+add('fe','agno3',{solutionColor:'#dff0e1', keepSolids:['fe'], deposit:{target:'fe', color:'#e6e6e6', crystal:true}, text:'На железе выделяются кристаллы серебра, раствор постепенно зеленеет.', eq:'Fe + 2AgNO₃ → Fe(NO₃)₂ + 2Ag↓'});
+
+/* Oxygen and dry heating */
+add('mg','o2',{keepSolids:['mg'], coldText:'При комнатной температуре магний в кислороде заметно не изменяется: нужна высокая температура.', coldEq:'2Mg + O₂ →(t°) 2MgO', text:'При комнатной температуре магний в кислороде заметно не изменяется: нужна высокая температура.', eq:'2Mg + O₂ →(t°) 2MgO', hotText:'Магний горит ярким белым пламенем, на месте ленты остаётся белый порошок MgO.', hotEq:'2Mg + O₂ →(t°) 2MgO', hotPrecip:{type:'dry-powder', color:'#ffffff', density:18}, burnFlash:true, consumed:['mg']});
+add('cu','o2',{keepSolids:['cu'], coldText:'Без нагревания медь с кислородом заметно не реагирует.', coldEq:'2Cu + O₂ →(t°) 2CuO', text:'Без нагревания медь с кислородом заметно не реагирует.', eq:'2Cu + O₂ →(t°) 2CuO', hotText:'При нагревании медь темнеет: чёрная плёнка CuO образуется на поверхности металла.', hotEq:'2Cu + O₂ →(t°) 2CuO', hotDeposit:{target:'cu', color:'#1d1d1d'}});
+add('fe','o2',{keepSolids:['fe'], coldText:'В сухом кислороде при комнатной температуре железо заметно не меняется.', coldEq:'3Fe + 2O₂ →(t°) Fe₃O₄', text:'В сухом кислороде при комнатной температуре железо заметно не меняется.', eq:'3Fe + 2O₂ →(t°) Fe₃O₄', hotText:'При нагревании железо темнеет: на поверхности образуется тёмная окалина.', hotEq:'3Fe + 2O₂ →(t°) Fe₃O₄', hotDeposit:{target:'fe', color:'#1d1d1d'}});
+
+/* Water / dissolution */
+add('water','kmno4',{solutionColor:'#b95dd1', consumed:['kmno4'], text:'Кристаллы KMnO₄ растворяются, окрашивая воду в насыщенный фиолетово-розовый цвет.', eq:'KMnO₄(тв.) → K⁺ + MnO₄⁻'});
+add('water','naco3',{solutionColor:'#f4f4f0', consumed:['naco3'], text:'Карбонат натрия растворяется в воде; видимых эффектов почти нет.', eq:'Na₂CO₃(тв.) → 2Na⁺ + CO₃²⁻'});
+add('water','nh4cl',{solutionColor:'#f4f4f0', consumed:['nh4cl'], text:'Кристаллы NH₄Cl постепенно растворяются в воде.', eq:'NH₄Cl(тв.) → NH₄⁺ + Cl⁻'});
+add('nh4cl','naoh',{solutionColor:'#f4f4f0', consumed:['nh4cl'], coldText:'Кристаллы NH₄Cl растворяются в растворе NaOH; без нагревания выделение аммиака слабое, видимых изменений почти нет.', coldEq:'NH₄Cl + NaOH → NaCl + NH₃·H₂O', text:'Кристаллы NH₄Cl растворяются в растворе NaOH; без нагревания выделение аммиака слабое, видимых изменений почти нет.', eq:'NH₄Cl + NaOH → NaCl + NH₃·H₂O', hotText:'При нагревании выделяется аммиак NH₃: пузырьки идут из раствора, сверху появляется светлый пар; влажный красный лакмус посинел бы. Это качественная реакция на ион NH₄⁺.', hotEq:'NH₄Cl + NaOH →(t°) NaCl + NH₃↑ + H₂O', hotGas:{from:'surface', color:'#ededed', count:14}, hotSmoke:{color:'#ededed'}});
+
+const HEAT_ONLY = {
+  'cuo': {coldText:'Чёрный порошок CuO лежит на дне; без реагента видимых изменений нет.', hotText:'CuO устойчив при нагревании на спиртовке и заметно не разлагается.', keepSolids:['cuo']},
+  'kmno4': {coldText:'Тёмно-фиолетовые кристаллы KMnO₄ лежат на дне; без воды и нагревания видимых изменений нет.', hotText:'При нагревании сухой KMnO₄ разлагается: выделяется O₂, остаётся тёмный твёрдый остаток.', hotEq:'2KMnO₄ →(t°) K₂MnO₄ + MnO₂ + O₂↑', gas:{from:'dry', color:'#e8e8e8', count:8}, precip:{type:'dry-powder', color:'#2b251f', density:22}, consumed:['kmno4']},
+  'caco3': {coldText:'Кусочек мела лежит на дне; CaCO₃ практически нерастворим в воде.', hotText:'При сильном прокаливании CaCO₃ разлагается с выделением CO₂, но на спиртовке процесс очень медленный.', hotEq:'CaCO₃ →(t°, сильное) CaO + CO₂↑', keepSolids:['caco3'], gas:{from:'solid', color:'#e8e8e8', count:4}},
+  'nh4cl': {coldText:'Кристаллы NH₄Cl без нагревания заметно не изменяются.', hotText:'При нагревании NH₄Cl сублимирует: у холодной части пробирки появляется белый налёт.', hotEq:'NH₄Cl ⇄ NH₃ + HCl; затем снова NH₄Cl на холодных стенках', smoke:{color:'#ededed'}, wallDeposit:{color:'#ffffff', place:'upper'}, consumed:['nh4cl']}
+};
+
+/* ============ STATE ============ */
+let tube = [];
+let burnerOn = false;
+let lastRenderSeed = 1;
+
+/* ============ DOM ============ */
+const listEl = document.getElementById('substanceList');
+const searchEl = document.getElementById('search');
+const contentsEl = document.getElementById('contents');
+const reactBtn = document.getElementById('reactBtn');
+const clearBtn = document.getElementById('clearBtn');
+const burnerEl = document.getElementById('burner');
+const flameEl = document.getElementById('flame');
+const burnerLabel = document.getElementById('burnerLabel');
+const heatGlow = document.getElementById('heatGlow');
+const liquidRect = document.getElementById('liquidRect');
+const bubblesG = document.getElementById('bubbles');
+const liquidWave = document.getElementById('liquidWave');
+const particlesG = document.getElementById('particles');
+const precipG = document.getElementById('precipitate');
+const smokeG = document.getElementById('smoke');
+const solidG = document.getElementById('solidLayer');
+const cloudG = document.getElementById('cloudLayer');
+const coatingG = document.getElementById('coatingLayer');
+const surfaceG = document.getElementById('surfaceLayer');
+const foamG = document.getElementById('foamLayer');
+const wallG = document.getElementById('wallDeposit');
+const additionG = document.getElementById('additionLayer');
+
+function subById(id){ return SUBSTANCES.find(s=>s.id===id); }
+function isLiquidLike(s){ return ['solution','liquid','indicator'].includes(s.form); }
+function isSolidLike(s){ return ['solid','powder','crystal','metal-granules','metal-powder','metal-wire','metal-ribbon'].includes(s.form); }
+function isMetalLike(s){ return s.form.startsWith('metal'); }
+function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function svgEl(tag, attrs={}){
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k, v));
+  return el;
+}
+function seededRandom(seedText){
+  let h = 2166136261;
+  for(let i=0;i<seedText.length;i++){ h ^= seedText.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return function(){ h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function hexToRgb(hex){
+  if(!hex || hex.startsWith('var(')) return [77,124,138];
+  const h = hex.replace('#','');
+  const full = h.length===3 ? h.split('').map(c=>c+c).join('') : h;
+  return [parseInt(full.slice(0,2),16), parseInt(full.slice(2,4),16), parseInt(full.slice(4,6),16)];
+}
+function rgbToHex([r,g,b]){ return '#' + [r,g,b].map(x=>clamp(Math.round(x),0,255).toString(16).padStart(2,'0')).join(''); }
+function mixColors(colors){
+  if(colors.length===0) return null;
+  const sum = colors.map(hexToRgb).reduce((a,c)=>[a[0]+c[0],a[1]+c[1],a[2]+c[2]],[0,0,0]);
+  return rgbToHex(sum.map(v=>v/colors.length));
+}
+function formText(s){
+  const map = {'solution':'раствор','liquid':'жидкость','indicator':'индикатор','powder':'порошок','crystal':'кристаллы','solid':'твёрдое','metal-granules':'гранулы','metal-powder':'порошок','metal-wire':'проволока','metal-ribbon':'лента','gas':'газ'};
+  return map[s.form] || 'вещество';
+}
+
+/* ============ RENDER LIST / CONTENTS ============ */
+function renderList(filter=''){
+  listEl.innerHTML = '';
+  const f = filter.trim().toLowerCase();
+  let lastCat = null;
+  SUBSTANCES.forEach(s=>{
+    const matches = !f || s.name.toLowerCase().includes(f) || s.formula.toLowerCase().includes(f) || formText(s).toLowerCase().includes(f);
+    if(!matches) return;
+    if(s.cat !== lastCat){
+      const catEl = document.createElement('div');
+      catEl.className = 'category';
+      catEl.textContent = s.cat;
+      listEl.appendChild(catEl);
+      lastCat = s.cat;
+    }
+    const row = document.createElement('div');
+    const full = tube.length >= 2;
+    row.className = 'substance' + (full ? ' disabled' : '');
+    row.tabIndex = full ? -1 : 0;
+    row.setAttribute('role','button');
+    row.innerHTML = `<span class="name">${s.name}</span><span class="formula">${s.formula}</span>`;
+    if(!full){
+      row.addEventListener('click', ()=>addSubstance(s.id));
+      row.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); addSubstance(s.id); } });
+    }
+    listEl.appendChild(row);
+  });
+  if(listEl.children.length === 0){
+    const none = document.createElement('div');
+    none.style.padding = '20px';
+    none.style.fontFamily = "'Courier New', monospace";
+    none.style.fontSize = '0.85rem';
+    none.style.color = 'var(--ink-soft)';
+    none.textContent = 'Ничего не найдено';
+    listEl.appendChild(none);
+  }
+}
+function renderContents(){
+  contentsEl.innerHTML = '';
+  if(tube.length === 0){
+    const span = document.createElement('span');
+    span.className = 'utility';
+    span.style.color = 'var(--ink-soft)';
+    span.style.fontStyle = 'italic';
+    span.textContent = 'пробирка пуста — выберите вещество';
+    contentsEl.appendChild(span);
+  } else {
+    tube.forEach((id,idx)=>{
+      const s = subById(id);
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `${s.name} <span style="color:var(--ink-soft)">(${s.formula})</span>`;
+      const rm = document.createElement('button');
+      rm.textContent = '✕';
+      rm.setAttribute('aria-label', 'Убрать ' + s.name);
+      rm.addEventListener('click', ()=>{ tube.splice(idx,1); updateAll(); });
+      chip.appendChild(rm);
+      contentsEl.appendChild(chip);
+    });
+  }
+  reactBtn.disabled = tube.length === 0;
+}
+
+function addSubstance(id){
+  if(tube.length >= 2) return;
+  const s = subById(id);
+  tube.push(id);
+  updateAll();
+  animateAddition(s);
+}
+function resetObservation(){
+  const obs = document.getElementById('observation');
+  obs.innerHTML = '<p class="empty">Добавьте вещество и проведите реакцию.</p>';
+}
+function updateAll(){
+  renderContents();
+  renderList(searchEl.value);
+  renderTubeVisual(buildBaseVisual(), 'base:' + tube.join('+'));
+}
+
+searchEl.addEventListener('input', ()=>renderList(searchEl.value));
+clearBtn.addEventListener('click', ()=>{ tube = []; resetObservation(); updateAll(); });
+
+/* ============ BURNER ============ */
+function toggleBurner(){
+  burnerOn = !burnerOn;
+  flameEl.classList.toggle('active', burnerOn);
+  heatGlow.classList.toggle('active', burnerOn);
+  burnerEl.classList.toggle('active', burnerOn);
+  burnerEl.setAttribute('aria-pressed', burnerOn ? 'true':'false');
+  burnerLabel.textContent = 'спиртовка: ' + (burnerOn ? 'вкл' : 'выкл');
+}
+burnerEl.addEventListener('click', toggleBurner);
+burnerEl.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleBurner(); } });
+
+/* ============ VISUAL MODEL ============ */
+function buildBaseVisual(){
+  const subs = tube.map(subById);
+  const liquids = subs.filter(isLiquidLike);
+  const solids = subs.filter(isSolidLike).map(s=>({id:s.id, form:s.form, color:s.solidColor || '#ddd'}));
+  const gasInput = subs.find(s=>s.form==='gas');
+  const colors = liquids.map(s=>s.color || '#f4f4f0');
+  let level = liquids.reduce((acc,s)=>acc + (s.amount || 52), 0);
+  if(level>0) level = clamp(level, 56, 154);
+  const visual = {
+    solutionColor: mixColors(colors),
+    level,
+    solids,
+    particles: liquids.length>0,
+    smoke:null,
+    gas:null,
+    precip:null,
+    foam:false,
+    deposit:null,
+    solidCoating:null,
+    wallDeposit:null,
+    burnFlash:false
+  };
+  if(gasInput && visual.level>0){
+    visual.gas = {from:'bottom', color:gasInput.gasColor || '#e8e8e8', count:8};
+  }
+  return visual;
+}
+function applyReactionVisual(base, result){
+  const visual = Object.assign({}, base);
+  const override = burnerOn ? 'hot' : 'cold';
+
+  if(result.solutionColor || result.liquidColor){ visual.solutionColor = result.solutionColor || result.liquidColor; }
+  if(result.level !== undefined){ visual.level = result.level; }
+  if(visual.level===0 && visual.solutionColor){ visual.level = 112; }
+
+  if(result.consumed){
+    visual.solids = visual.solids.filter(s=>!result.consumed.includes(s.id));
+  }
+  if(result.keepSolids){
+    const keepSet = new Set(result.keepSolids);
+    const existing = new Set(visual.solids.map(s=>s.id));
+    tube.map(subById).filter(isSolidLike).forEach(s=>{
+      if(keepSet.has(s.id) && !existing.has(s.id)) visual.solids.push({id:s.id, form:s.form, color:s.solidColor || '#ddd'});
+    });
+  }
+
+  visual.precip = result.precip || (result.precipitate ? {type:result.precipType || 'bottom', color:result.precipColor || '#ffffff'} : null);
+  visual.gas = normalizeGas(result.gas);
+  visual.foam = !!result.foam;
+  visual.deposit = result.deposit || null;
+  visual.solidCoating = result.solidCoating || null;
+  visual.wallDeposit = result.wallDeposit || null;
+  visual.smoke = result.smoke || null;
+  visual.burnFlash = !!result.burnFlash;
+
+  if(override === 'hot'){
+    if(result.hotPrecip) visual.precip = result.hotPrecip;
+    if(result.hotGas) visual.gas = normalizeGas(result.hotGas);
+    if(result.hotSmoke) visual.smoke = result.hotSmoke;
+    if(result.hotDeposit) visual.deposit = result.hotDeposit;
+  }
+  if(override === 'cold'){
+    if(result.coldPrecip) visual.precip = result.coldPrecip;
+    if(result.coldGas) visual.gas = normalizeGas(result.coldGas);
+    if(result.coldDeposit) visual.deposit = result.coldDeposit;
+  }
+  return visual;
+}
+function normalizeGas(gas){
+  if(!gas) return null;
+  if(gas === true) return {from:'bulk', color:'#e8e8e8', count:14};
+  return Object.assign({from:'bulk', color:'#e8e8e8', count:14}, gas);
+}
+
+const TUBE_BOTTOM_Y = 228;
+function renderTubeVisual(visual={}, seed=''){
+  lastRenderSeed++;
+  const rand = seededRandom(seed + ':' + lastRenderSeed);
+  const bottomY = TUBE_BOTTOM_Y;
+  const fillLevel = visual.solutionColor && visual.level ? clamp(visual.level, 42, 176) : 0;
+  const surfaceY = fillLevel ? bottomY - fillLevel : bottomY;
+
+  [solidG, cloudG, precipG, coatingG, surfaceG, foamG, bubblesG, wallG].forEach(g=>{ if(g) g.innerHTML = ''; });
+
+  if(visual.solutionColor && fillLevel){
+    document.documentElement.style.setProperty('--liquid-color', visual.solutionColor);
+    liquidRect.setAttribute('fill', 'url(#liquidGradient)');
+    liquidRect.setAttribute('y', surfaceY);
+    liquidRect.setAttribute('height', fillLevel);
+    liquidWave.setAttribute('opacity', '0.95');
+    liquidWave.setAttribute(
+  'd',
+  `M25,${surfaceY} C33,${surfaceY-5} 42,${surfaceY+5} 50,${surfaceY} C58,${surfaceY-5} 67,${surfaceY+5} 75,${surfaceY} L75,${bottomY} L25,${bottomY} Z`
+);
+    particlesG.setAttribute('opacity', visual.particles === false ? '0.12' : '0.32');
+  } else {
+    liquidRect.setAttribute('fill', 'transparent');
+    liquidRect.setAttribute('height', '0');
+    liquidWave.setAttribute('opacity', '0');
+    particlesG.setAttribute('opacity', '0');
+  }
+
+  drawCloud(visual.precip, surfaceY, fillLevel, rand);
+  drawSolids(visual.solids || [], rand, fillLevel);
+  drawPrecipitate(visual.precip, surfaceY, fillLevel, rand);
+  drawCoating(visual.deposit || visual.solidCoating, visual.solids || [], rand);
+  drawSurface(visual.precip, surfaceY, fillLevel, rand);
+  drawFoam(visual.foam, surfaceY, fillLevel, rand);
+  drawBubbles(visual.gas, surfaceY, fillLevel, rand);
+  drawWallDeposit(visual.wallDeposit, rand);
+  drawSmoke(visual.smoke || null);
+
+  solidG.setAttribute('opacity', (visual.solids && visual.solids.length) ? '1' : '0');
+  cloudG.setAttribute('opacity', cloudG.children.length ? '1' : '0');
+  precipG.setAttribute('opacity', precipG.children.length ? '1' : '0');
+  coatingG.setAttribute('opacity', coatingG.children.length ? '1' : '0');
+  surfaceG.setAttribute('opacity', surfaceG.children.length ? '1' : '0');
+  foamG.setAttribute('opacity', foamG.children.length ? '1' : '0');
+  bubblesG.setAttribute('opacity', bubblesG.children.length ? '1' : '0');
+  wallG.setAttribute('opacity', wallG.children.length ? '1' : '0');
+  if(visual.burnFlash){ heatGlow.classList.add('active'); }
+}
+
+function drawSolids(solids, rand, fillLevel){
+  solids.forEach((s, idx)=>{
+    const color = s.color || '#ddd';
+
+    if(s.form === 'metal-ribbon'){
+      const p = svgEl('path', {
+        d:'M36 218 C43 212, 50 226, 64 216',
+        fill:'none',
+        stroke:color,
+        'stroke-width':'4.5',
+        'stroke-linecap':'round',
+        class:'metal'
+      });
+      solidG.appendChild(p);
+      return;
+    }
+
+    if(s.form === 'metal-wire'){
+      const p = svgEl('path', {
+        d:'M40 220 C48 210, 58 212, 62 222',
+        fill:'none',
+        stroke:color,
+        'stroke-width':'4.2',
+        'stroke-linecap':'round',
+        class:'metal'
+      });
+      solidG.appendChild(p);
+      return;
+    }
+
+    const count =
+      s.form === 'powder' || s.form === 'metal-powder'
+        ? 18
+        : s.form === 'crystal'
+          ? 10
+          : s.form === 'metal-granules'
+            ? 5
+            : 3;
+
+    for(let i=0;i<count;i++){
+      const x = 35 + rand()*30;
+      const y = 218 + rand()*8 - Math.min(idx*3, 5);
+      const r =
+        s.form === 'solid'
+          ? 4 + rand()*2.8
+          : s.form === 'metal-granules'
+            ? 2.6 + rand()*2
+            : 1.15 + rand()*1.65;
+
+      if(s.form === 'solid'){
+        const pts = `${x-r},${y} ${x-r/2},${y-r*0.8} ${x+r*0.7},${y-r*0.55} ${x+r},${y+r*0.35} ${x-r*0.3},${y+r}`;
+        solidG.appendChild(svgEl('polygon', {
+          points:pts,
+          fill:color,
+          opacity:'0.96',
+          class:'chunk'
+        }));
+      } else if(s.form === 'crystal'){
+        const pts = `${x},${y-r} ${x+r},${y} ${x},${y+r} ${x-r},${y}`;
+        solidG.appendChild(svgEl('polygon', {
+          points:pts,
+          fill:color,
+          opacity:'0.95',
+          class:'grain'
+        }));
+      } else {
+        solidG.appendChild(svgEl('ellipse', {
+          cx:x,
+          cy:y,
+          rx:r*1.15,
+          ry:r*0.78,
+          fill:color,
+          opacity:'0.96',
+          class:'grain'
+        }));
+      }
+    }
+  });
+}
+function drawCloud(precip, surfaceY, fillLevel, rand){
+  if(!precip || !['cloud','gel'].includes(precip.type)) return;
+  const count = precip.density || (precip.type==='gel' ? 28 : 34);
+  const top = fillLevel ? surfaceY + 10 : 86;
+  const bottom = fillLevel ? 210 : 216;
+  for(let i=0;i<count;i++){
+    const x = 32 + rand()*36;
+    const y = top + rand()*(bottom-top);
+    const r = precip.type === 'gel' ? 2.8 + rand()*5.6 : 1.2 + rand()*2.4;
+    cloudG.appendChild(svgEl('circle', {cx:x, cy:y, r, fill:precip.color || '#fff', opacity:precip.type==='gel' ? '0.56' : '0.5', class:'cloud-dot'}));
+  }
+}
+function drawPrecipitate(precip, surfaceY, fillLevel, rand){
+  if(!precip || ['cloud','gel','surface-coating'].includes(precip.type)) return;
+  const color = precip.color || '#fff';
+  if(precip.type === 'dry-powder'){
+    for(let i=0;i<(precip.density || 18);i++){
+      const x = 36 + rand()*28;
+      const y = 206 + rand()*10;
+      const r = 1.4 + rand()*2.2;
+      precipG.appendChild(svgEl('circle', {cx:x, cy:y, r, fill:color, opacity:'0.95', class:'precip-dot'}));
+    }
+    return;
+  }
+  const height = precip.type === 'dense-bottom' ? 18 : 13;
+  precipG.appendChild(svgEl('path', {
+  d:`M28 ${TUBE_BOTTOM_Y-height} C39 ${TUBE_BOTTOM_Y-4-height} 51 ${TUBE_BOTTOM_Y+2-height} 72 ${TUBE_BOTTOM_Y-2-height} L72 ${TUBE_BOTTOM_Y} L28 ${TUBE_BOTTOM_Y} Z`,
+  fill:color,
+  opacity:'0.75'
+}));
+  const count = precip.density || (precip.type==='curdy' ? 20 : 18);
+  for(let i=0;i<count;i++){
+    const x = 32 + rand()*36;
+    const y = (precip.type==='curdy' ? 190 + rand()*34 : 215 + rand()*10);
+    const r = precip.type==='curdy' ? 1.9 + rand()*3.2 : 1.3 + rand()*2.4;
+    precipG.appendChild(svgEl('circle', {cx:x, cy:y, r, fill:color, opacity:precip.type==='curdy' ? '0.82' : '0.92', class:'precip-dot'}));
+  }
+}
+function drawSurface(precip, surfaceY, fillLevel, rand){
+  if(!precip || precip.type !== 'surface-coating') return;
+  const y = fillLevel ? surfaceY + 4 : 206;
+  surfaceG.appendChild(svgEl('path', {d:`M31 ${y} C42 ${y-5} 56 ${y+4} 69 ${y-2}`, fill:'none', stroke:precip.color || '#fff', 'stroke-width':'4', 'stroke-linecap':'round', opacity:'0.9'}));
+}
+function drawCoating(coating, solids, rand){
+  if(!coating) return;
+  const color = coating.color || '#fff';
+  if(coating.target === 'cu' || coating.target === 'mg'){
+    for(let i=0;i<11;i++){
+      const x = 39 + rand()*25;
+      const y = 202 + rand()*10;
+      const r = coating.crystal ? 1.2 + rand()*2.3 : 1.5 + rand()*1.8;
+      coatingG.appendChild(svgEl(coating.crystal ? 'rect' : 'circle', coating.crystal ? {x:x-r, y:y-r, width:r*2, height:r*2, fill:color, opacity:'0.95', class:'coat-dot'} : {cx:x, cy:y, r, fill:color, opacity:'0.9', class:'coat-dot'}));
+    }
+  } else if(coating.target === 'fe' || coating.target === 'zn' || coating.target === 'caco3'){
+    for(let i=0;i<16;i++){
+      const x = 35 + rand()*30;
+      const y = 205 + rand()*12;
+      const r = coating.crystal ? 1.2 + rand()*2.1 : 1.3 + rand()*2.2;
+      coatingG.appendChild(svgEl('circle', {cx:x, cy:y, r, fill:color, opacity:'0.92', class:'coat-dot'}));
+    }
+  } else {
+    for(let i=0;i<12;i++) coatingG.appendChild(svgEl('circle', {cx:36+rand()*28, cy:205+rand()*10, r:1.2+rand()*2, fill:color, opacity:'0.9', class:'coat-dot'}));
+  }
+}
+function drawFoam(show, surfaceY, fillLevel, rand){
+  if(!show || !fillLevel) return;
+  for(let i=0;i<15;i++){
+    const x = 29 + rand()*42;
+    const y = surfaceY - 4 + rand()*9;
+    const r = 1.6 + rand()*2.6;
+    foamG.appendChild(svgEl('circle', {cx:x, cy:y, r, fill:'rgba(255,255,255,0.78)', stroke:'rgba(255,255,255,0.55)', 'stroke-width':'0.4'}));
+  }
+}
+function drawBubbles(gas, surfaceY, fillLevel, rand){
+  if(!gas) return;
+  const count = gas.count || 14;
+  const hasLiquid = !!fillLevel;
+  for(let i=0;i<count;i++){
+    let x = 34 + rand()*32;
+    let y = 208 + rand()*16;
+    if(gas.from === 'surface') y = (hasLiquid ? surfaceY + 5 : 198) + rand()*14;
+    if(gas.from === 'bulk') y = hasLiquid ? surfaceY + 16 + rand()*Math.max(20, 204 - surfaceY) : 202 + rand()*10;
+    if(gas.from === 'bottom') y = 216 + rand()*9;
+    if(gas.from === 'solid' || gas.from === 'metal' || gas.from === 'powder'){
+      x = 36 + rand()*28;
+      y = 212 + rand()*12;
+    }
+    if(gas.from === 'dry'){
+      x = 38 + rand()*24;
+      y = 184 + rand()*28;
+    }
+    const r = 1.15 + rand()*2.2;
+    const c = svgEl('circle', {cx:x, cy:y, r, fill:'none', stroke:gas.color || '#e8e8e8', 'stroke-width':'1.1', opacity:'0.82'});
+    c.style.animationDelay = `${(rand()*1.2).toFixed(2)}s`;
+    bubblesG.appendChild(c);
+  }
+}
+function drawWallDeposit(wall, rand){
+  if(!wall) return;
+  const color = wall.color || '#fff';
+  for(let i=0;i<7;i++){
+    const y = 32 + rand()*42;
+    const side = rand() > 0.5 ? 68 : 32;
+    wallG.appendChild(svgEl('path', {d:`M${side} ${y} C${side + (side>50?-3:3)} ${y+8}, ${side + (side>50?-2:2)} ${y+15}, ${side} ${y+22}`, stroke:color, 'stroke-width':'1.6', fill:'none', class:'wall-mark'}));
+  }
+}
+function drawSmoke(smoke){
+  if(!smoke){
+    smokeG.setAttribute('opacity', '0');
+    return;
+  }
+  smokeG.querySelectorAll('circle').forEach((c,idx)=>{
+    c.setAttribute('fill', smoke.color || '#d8d8d8');
+    c.setAttribute('opacity', String(0.52 + idx*0.08));
+  });
+  smokeG.setAttribute('opacity', '1');
+}
+function animateAddition(s){
+  additionG.innerHTML = '';
+  additionG.classList.add('active');
+  const color = s.color || s.solidColor || s.gasColor || '#e8e8e8';
+  if(isLiquidLike(s)){
+    additionG.appendChild(svgEl('path', {d:'M50 -18 L50 85', stroke:color, 'stroke-width':'3', 'stroke-linecap':'round', opacity:'0.92', class:'add-stream'}));
+    for(let i=0;i<4;i++) additionG.appendChild(svgEl('circle', {cx:48+i*2, cy:18+i*15, r:1.8, fill:color, opacity:'0.9', class:'add-drop'}));
+  } else if(s.form === 'gas'){
+    for(let i=0;i<7;i++) additionG.appendChild(svgEl('circle', {cx:36+i*5, cy:96+i%2*8, r:2.2, fill:'none', stroke:color, 'stroke-width':'1', opacity:'0.85', class:'add-drop'}));
+  } else {
+    for(let i=0;i<9;i++) additionG.appendChild(svgEl('circle', {cx:36 + i*4 + (i%2)*2, cy:8 + (i%3)*14, r:1.6 + (i%3)*0.4, fill:color, opacity:'0.95', class:'add-grain'}));
+  }
+  setTimeout(()=>{ additionG.innerHTML=''; additionG.classList.remove('active'); }, 760);
+}
+
+/* ============ REACTION LOGIC ============ */
+function describeNoReaction(){
+  const base = buildBaseVisual();
+  if(tube.length === 1){
+    const s = subById(tube[0]);
+    if(HEAT_ONLY[s.id]){
+      const data = HEAT_ONLY[s.id];
+      const result = burnerOn ? {
+        text:data.hotText, eq:data.hotEq, solutionColor:data.solutionColor, precip:data.precip, gas:data.gas, smoke:data.smoke, wallDeposit:data.wallDeposit, consumed:data.consumed, keepSolids:data.keepSolids
+      } : {text:data.coldText, eq:data.coldEq, keepSolids:data.keepSolids};
+      return {result, visual:applyReactionVisual(base, result)};
+    }
+    const text = isLiquidLike(s)
+      ? `В пробирку налит ${formText(s)} «${s.name}» (${s.formula}). Без второго реактива видимой реакции нет.`
+      : isSolidLike(s)
+        ? `В пробирку помещено твёрдое вещество «${s.name}» (${s.formula}): оно лежит на дне в виде ${formText(s)}. Добавьте жидкий реагент или включите нагрев, если это нужно для реакции.`
+        : `В пробирку подан газ «${s.name}» (${s.formula}). Сам по себе он обычно не виден; для опыта нужен второй реагент.`;
+    const result = {text};
+    return {result, visual:base};
+  }
+  const [a,b] = tube.map(subById);
+  const result = {text:`«${a.name}» (${a.formula}) и «${b.name}» (${b.formula}) при смешивании не дают заметного школьного признака реакции: нет осадка, газа или характерного изменения окраски.`, eq:`${a.formula} + ${b.formula} → видимых изменений нет`};
+  return {result, visual:base};
+}
+function pickReaction(){
+  if(tube.length !== 2) return null;
+  return REACTIONS[key(tube[0], tube[1])] || null;
+}
+function runReaction(){
+  let result, visual;
+  const base = buildBaseVisual();
+  const data = pickReaction();
+  if(data){
+    result = Object.assign({}, data);
+    if(!burnerOn && result.coldText){
+      result.text = result.coldText;
+      result.eq = result.coldEq || result.eq;
+    }
+    if(burnerOn && result.hotText){
+      result.text = result.hotText;
+      result.eq = result.hotEq || result.eq;
+    }
+    visual = applyReactionVisual(base, result);
+  } else {
+    const fallback = describeNoReaction();
+    result = fallback.result;
+    visual = fallback.visual;
+  }
+  renderTubeVisual(visual, 'reaction:' + tube.join('+') + ':' + (burnerOn?'hot':'cold'));
+  const obs = document.getElementById('observation');
+  let html = `<p>${result.text}</p>`;
+  if(result.eq) html += `<div class="eq">${result.eq}</div>`;
+  obs.innerHTML = html;
+  obs.style.animation = 'none';
+  void obs.offsetWidth;
+  obs.style.transition = 'background-color .15s';
+  obs.style.backgroundColor = 'rgba(179,80,43,0.12)';
+  setTimeout(()=>{ obs.style.backgroundColor = 'rgba(20,25,32,0.92)'; }, 350);
+}
+reactBtn.addEventListener('click', runReaction);
+
+/* ============ INIT ============ */
+renderList();
+renderContents();
+renderTubeVisual(buildBaseVisual(), 'empty');
+</script>
+</body>
+</html>
